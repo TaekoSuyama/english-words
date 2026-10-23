@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中1英語 単語発音プレイヤー</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Zen Maru Gothic', 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+    }
+    .en-font {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    /* タップ時の視覚的フィードバック */
+    .word-btn:active {
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 pb-12">
+
+  <!-- ヘッダー -->
+  <header class="bg-indigo-600 text-white sticky top-0 z-10 shadow-md">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <svg class="w-6 h-6 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+        </svg>
+        <h1 class="text-lg font-bold tracking-wide">中1英語 発音タッチプレイヤー</h1>
+      </div>
+      <span class="text-xs bg-indigo-500 px-2.5 py-1 rounded-full font-medium">光村図書 Here We Go! 対応</span>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-4 pt-4 space-y-6">
+
+    <!-- 自由入力発音エリア -->
+    <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+      <label for="custom-word" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+        🔍 プリントの単語を自由に入力して聴く
+      </label>
+      <div class="flex gap-2">
+        <input 
+          type="text" 
+          id="custom-word" 
+          placeholder="例: favorite, Wednesday" 
+          class="flex-1 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base en-font"
+        >
+        <button 
+          onclick="speakCustomWord()" 
+          class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-3 rounded-xl shadow-md active:scale-95 transition-all flex items-center shrink-0"
+        >
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          発音
+        </button>
+      </div>
+    </section>
+
+    <!-- 単語グループ切替タブ -->
+    <section>
+      <div class="flex overflow-x-auto space-x-2 pb-2 scrollbar-none" id="tab-container">
+        <!-- JSでタブ動的生成 -->
+      </div>
+    </section>
+
+    <!-- ボタン一覧表示エリア -->
+    <section id="word-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <!-- JSで単語ボタンを動的生成 -->
+    </section>
+
+  </main>
+
+  <!-- 再生中通知トースト -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white px-5 py-2.5 rounded-full shadow-lg text-sm font-medium flex items-center space-x-2 opacity-0 pointer-events-none transition-all duration-300">
+    <span class="w-2 h-2 bg-green-400 rounded-full animate-ping"></span>
+    <span id="toast-text" class="en-font">Pronouncing...</span>
+  </div>
+
+  <script>
+    // 単語データの定義（グループ別）
+    const wordGroups = [
+      {
+        id: "lets-be-friends",
+        title: "Let's Be Friends!",
+        words: [
+          { en: "sport", ja: "スポーツ", pos: "名" },
+          { en: "soccer", ja: "サッカー", pos: "名" },
+          { en: "basketball", ja: "バスケットボール", pos: "名" },
+          { en: "favorite", ja: "お気に入りの", pos: "形" },
+          { en: "music", ja: "音楽", pos: "名" },
+          { en: "history", ja: "歴史", pos: "名" },
+          { en: "math", ja: "数学", pos: "名" },
+          { en: "picture", ja: "絵、写真", pos: "名" },
+          { en: "piano", ja: "ピアノ", pos: "名" },
+          { en: "make", ja: "（物）を作る", pos: "動" },
+          { en: "smile", ja: "笑顔、ほほえみ", pos: "名" },
+          { en: "feeling", ja: "気持ち、感情", pos: "名" }
+        ]
+      },
+      {
+        id: "unit1",
+        title: "Unit 1 あいさつ・自己紹介",
+        words: [
+          { en: "hello", ja: "こんにちは", pos: "他" },
+          { en: "friend", ja: "友達", pos: "名" },
+          { en: "teacher", ja: "先生", pos: "名" },
+          { en: "student", ja: "生徒", pos: "名" },
+          { en: "school", ja: "学校", pos: "名" },
+          { en: "like", ja: "〜が好き", pos: "動" },
+          { en: "play", ja: "〜をする・演奏する", pos: "動" },
+          { en: "study", ja: "勉強する", pos: "動" }
+        ]
+      },
+      {
+        id: "unit2",
+        title: "Unit 2 日常の表現",
+        words: [
+          { en: "breakfast", ja: "朝食", pos: "名" },
+          { en: "everyday", ja: "毎日", pos: "副" },
+          { en: "read", ja: "読む", pos: "動" },
+          { en: "book", ja: "本", pos: "名" },
+          { en: "write", ja: "書く", pos: "動" },
+          { en: "speak", ja: "話す", pos: "動" },
+          { en: "English", ja: "英語", pos: "名" }
+        ]
+      }
+    ];
+
+    let currentGroupIndex = 0;
+    let synth = window.speechSynthesis;
+
+    // 初期化処理
+    window.addEventListener('DOMContentLoaded', () => {
+      renderTabs();
+      renderWords();
+
+      // Enterキーで自由入力発音
+      document.getElementById('custom-word').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          speakCustomWord();
+        }
+      });
+    });
+
+    // タブの描画
+    function renderTabs() {
+      const container = document.getElementById('tab-container');
+      container.innerHTML = wordGroups.map((group, idx) => `
+        <button 
+          onclick="switchGroup(${idx})"
+          class="px-4 py-2 rounded-xl text-sm font-bold shrink-0 transition-all ${
+            idx === currentGroupIndex 
+              ? 'bg-indigo-600 text-white shadow-sm' 
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }"
+        >
+          ${group.title}
+        </button>
+      `).join('');
+    }
+
+    // グループ切り替え
+    function switchGroup(index) {
+      currentGroupIndex = index;
+      renderTabs();
+      renderWords();
+    }
+
+    // 単語ボタンの描画
+    function renderWords() {
+      const grid = document.getElementById('word-grid');
+      const currentWords = wordGroups[currentGroupIndex].words;
+
+      grid.innerHTML = currentWords.map(item => `
+        <button 
+          onclick="speakText('${item.en}')" 
+          class="word-btn bg-white hover:border-indigo-400 border-2 border-slate-200/80 rounded-2xl p-4 text-left shadow-sm hover:shadow transition-all flex flex-col justify-between h-28 relative group"
+        >
+          <div class="flex items-start justify-between w-full">
+            <span class="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold">${item.pos}</span>
+            <svg class="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="text-lg font-extrabold text-slate-800 en-font leading-tight">${item.en}</div>
+            <div class="text-xs font-medium text-slate-500 truncate mt-0.5">${item.ja}</div>
+          </div>
+        </button>
+      `).join('');
+    }
+
+    // テキスト読み上げメイン処理
+    function speakText(text) {
+      if (!text || text.trim() === '') return;
+
+      // 前の音声があれば停止
+      if (synth.speaking) {
+        synth.cancel();
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US'; // アメリカ英語
+      utterance.rate = 0.85;    // 少しゆっくりめで聴きやすく
+
+      // 音声の取得（英語音声を優先選択）
+      const voices = synth.getVoices();
+      const enVoice = voices.find(v => v.lang.includes('en') && v.name.includes('Google')) || voices.find(v => v.lang.includes('en'));
+      if (enVoice) utterance.voice = enVoice;
+
+      synth.speak(utterance);
+
+      // トースト通知
+      showToast(text);
+    }
+
+    // 自由入力発音実行
+    function speakCustomWord() {
+      const input = document.getElementById('custom-word');
+      const val = input.value.trim();
+      if (val) {
+        speakText(val);
+      }
+    }
+
+    // トースト表示
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.textContent = `🔊 ${text}`;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
